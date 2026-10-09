@@ -1,403 +1,383 @@
-```javascript
 /* ========================================
-EBSA BULTI PORTFOLIO - JAVASCRIPT
+   EBSA BULTI PORTFOLIO - JAVASCRIPT
 ======================================== */
 
+
 /* ========================================
-1. EMAILJS - CONTACT FORM
+   1. EMAILJS - CONTACT FORM
 ======================================== */
 
 // EmailJS Public Key
-const EMAILJS_PUBLIC_KEY = "abc123XYZ";
+const EMAILJS_PUBLIC_KEY = "YHt-OxtT_YtCf3eoO";
 
 // EmailJS Service ID
 const EMAILJS_SERVICE_ID = "service_wb44258";
 
 // EmailJS Template ID
-const EMAILJS_TEMPLATE_ID = "template_abc12";
+// YOUR_REAL_TEMPLATE_ID bakka Template ID kee isa dhugaa galchi.
+const EMAILJS_TEMPLATE_ID = "YOUR_REAL_TEMPLATE_ID";
+
 
 // Initialize EmailJS
 if (typeof emailjs !== "undefined") {
-emailjs.init({
-    publicKey: EMAILJS_PUBLIC_KEY
-});
+    emailjs.init({
+        publicKey: EMAILJS_PUBLIC_KEY
+    });
 }
 
-// Get Contact Form
+
+// Contact form elements
 const contactForm = document.getElementById("contact-form");
-
-// Get Form Status
 const formStatus = document.getElementById("form-status");
-
-// Get Send Button
 const sendMessageButton = document.getElementById("sendMessageButton");
 
-// Contact Form Submit
+
+// Display contact form status
+function showFormStatus(message, state) {
+    if (!formStatus) return;
+
+    formStatus.textContent = message;
+    formStatus.setAttribute("role", "status");
+    formStatus.setAttribute("aria-live", "polite");
+    formStatus.dataset.state = state || "";
+}
+
+
+// Enable or disable send button
+function setSending(isSending) {
+    if (!sendMessageButton) return;
+
+    sendMessageButton.disabled = isSending;
+
+    sendMessageButton.textContent = isSending
+        ? "Sending..."
+        : "Send Message";
+}
+
+
+// Contact form submission
 if (contactForm) {
-
-contactForm.addEventListener(
-    "submit",
-    function (event) {
-
-        // Stop page refresh
+    contactForm.addEventListener("submit", async function (event) {
         event.preventDefault();
+
+        // Check form validity
+        if (!contactForm.checkValidity()) {
+            contactForm.reportValidity();
+            return;
+        }
 
         // Check EmailJS
         if (typeof emailjs === "undefined") {
-
-            if (formStatus) {
-                formStatus.textContent =
-                    "❌ Email service is not available.";
-            }
-
+            showFormStatus(
+                "Email service did not load. Check your internet connection and try again.",
+                "error"
+            );
             return;
         }
 
-        // Check EmailJS IDs
+        // Check configuration
         if (
-            EMAILJS_PUBLIC_KEY === "abc123XYZ" ||
-            EMAILJS_SERVICE_ID === "service_wb44258" ||
-            EMAILJS_TEMPLATE_ID === "template_abc12"
+            !EMAILJS_PUBLIC_KEY ||
+            EMAILJS_TEMPLATE_ID === "YOUR_REAL_TEMPLATE_ID"
         ) {
-
-            if (formStatus) {
-                formStatus.textContent =
-                    "⚠️ Please add your EmailJS IDs first.";
-            }
-
+            showFormStatus(
+                "Please add your real EmailJS Template ID in script.js first.",
+                "warning"
+            );
             return;
         }
 
-        // Show sending message
-        if (formStatus) {
-            formStatus.textContent =
-                "📨 Sending your message...";
-        }
+        setSending(true);
+        showFormStatus("Sending your message...", "sending");
 
-        // Disable send button
-        if (sendMessageButton) {
-
-            sendMessageButton.disabled = true;
-
-            sendMessageButton.textContent =
-                "Sending...";
-
-        }
-
-        // Send form
-        emailjs.sendForm(
-            EMAILJS_SERVICE_ID,
-            EMAILJS_TEMPLATE_ID,
-            contactForm
-        )
-
-        .then(function (response) {
-
-            console.log(
-                "Email sent successfully:",
-                response.status,
-                response.text
+        try {
+            // Send message through EmailJS
+            await emailjs.sendForm(
+                EMAILJS_SERVICE_ID,
+                EMAILJS_TEMPLATE_ID,
+                contactForm
             );
 
-            // Success message
-            if (formStatus) {
-                formStatus.textContent =
-                    "✅ Your message has been sent successfully!";
-            }
+            showFormStatus(
+                "Your message was sent successfully. Thank you!",
+                "success"
+            );
 
-            // Clear form
             contactForm.reset();
 
-        })
+        } catch (error) {
+            console.error("EmailJS error:", error);
 
-        .catch(function (error) {
-
-            console.error(
-                "EmailJS Error:",
-                error
+            showFormStatus(
+                "Your message could not be sent. Check your EmailJS settings and try again.",
+                "error"
             );
 
-            if (formStatus) {
-                formStatus.textContent =
-                    "❌ Message could not be sent. Please try again.";
-            }
-
-        })
-
-        .finally(function () {
-
-            // Enable button again
-            if (sendMessageButton) {
-
-                sendMessageButton.disabled = false;
-
-                sendMessageButton.textContent =
-                    "Send Message";
-
-            }
-
-        });
-
-    }
-);
-
+        } finally {
+            setSending(false);
+        }
+    });
 }
 
+
 /* ========================================
-2. DARK MODE / LIGHT MODE
+   2. DARK MODE / LIGHT MODE
 ======================================== */
 
 const darkModeButton =
-document.getElementById("darkModeButton");
+    document.getElementById("darkModeButton");
 
-if (darkModeButton) {
+const DARK_MODE_STORAGE_KEY = "darkMode";
 
-// Get saved mode
-const savedMode =
-    localStorage.getItem("darkMode");
 
-// Apply saved mode
-if (savedMode === "enabled") {
+// Apply theme
+function applyTheme(isDark) {
+    document.body.classList.toggle("dark-mode", isDark);
 
-    document.body.classList.add("dark-mode");
+    if (darkModeButton) {
+        darkModeButton.textContent = isDark
+            ? "☀️ Light Mode"
+            : "🌙 Dark Mode";
 
-    darkModeButton.textContent =
-        "☀️ Light Mode";
-
-}
-
-else {
-
-    document.body.classList.remove("dark-mode");
-
-    darkModeButton.textContent =
-        "🌙 Dark Mode";
-
-}
-
-// Change mode when button is clicked
-darkModeButton.addEventListener(
-    "click",
-    function () {
-
-        document.body.classList.toggle(
-            "dark-mode"
+        darkModeButton.setAttribute(
+            "aria-pressed",
+            String(isDark)
         );
-
-        // Dark Mode
-        if (
-            document.body.classList.contains(
-                "dark-mode"
-            )
-        ) {
-
-            localStorage.setItem(
-                "darkMode",
-                "enabled"
-            );
-
-            darkModeButton.textContent =
-                "☀️ Light Mode";
-
-        }
-
-        // Light Mode
-        else {
-
-            localStorage.setItem(
-                "darkMode",
-                "disabled"
-            );
-
-            darkModeButton.textContent =
-                "🌙 Dark Mode";
-
-        }
-
     }
-);
-
 }
+
+
+// Load saved theme
+try {
+    const savedMode =
+        localStorage.getItem(DARK_MODE_STORAGE_KEY);
+
+    applyTheme(savedMode === "enabled");
+
+} catch (error) {
+    applyTheme(false);
+}
+
+
+// Toggle dark mode
+if (darkModeButton) {
+    darkModeButton.addEventListener("click", function () {
+        const isDark =
+            !document.body.classList.contains("dark-mode");
+
+        applyTheme(isDark);
+
+        try {
+            localStorage.setItem(
+                DARK_MODE_STORAGE_KEY,
+                isDark ? "enabled" : "disabled"
+            );
+        } catch (error) {
+            console.warn(
+                "Could not save the theme preference.",
+                error
+            );
+        }
+    });
+}
+
 
 /* ========================================
-3. MOBILE MENU
+   3. MOBILE NAVIGATION MENU
 ======================================== */
 
 const menuButton =
-document.getElementById("menuButton");
+    document.getElementById("menuButton");
 
 const navLinks =
-document.getElementById("navLinks");
+    document.getElementById("navLinks");
 
-if (menuButton && navLinks) {
 
-    menuButton.addEventListener(
-        "click",
-        function () {
+// Close mobile menu
+function closeMobileMenu() {
+    if (!menuButton || !navLinks) return;
 
-            navLinks.classList.toggle("active");
+    navLinks.classList.remove("active");
 
-            if (
-                navLinks.classList.contains("active")
-            ) {
+    menuButton.textContent = "☰";
 
-                menuButton.textContent = "✕";
-
-            }
-
-            else {
-
-                menuButton.textContent = "☰";
-
-            }
-
-        }
+    menuButton.setAttribute(
+        "aria-label",
+        "Open navigation menu"
     );
 
-    const navigationLinks =
-        navLinks.querySelectorAll("a");
-
-    navigationLinks.forEach(
-        function (link) {
-
-            link.addEventListener(
-                "click",
-                function () {
-
-                    navLinks.classList.remove(
-                        "active"
-                    );
-
-                    menuButton.textContent =
-                        "☰";
-
-                }
-            );
-
-        }
+    menuButton.setAttribute(
+        "aria-expanded",
+        "false"
     );
-
 }
 
+
+// Mobile navigation controls
+if (menuButton && navLinks) {
+    menuButton.setAttribute(
+        "aria-label",
+        "Open navigation menu"
+    );
+
+    menuButton.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+    // Open or close menu
+    menuButton.addEventListener("click", function () {
+        const isOpen =
+            navLinks.classList.toggle("active");
+
+        menuButton.textContent = isOpen
+            ? "✕"
+            : "☰";
+
+        menuButton.setAttribute(
+            "aria-label",
+            isOpen
+                ? "Close navigation menu"
+                : "Open navigation menu"
+        );
+
+        menuButton.setAttribute(
+            "aria-expanded",
+            String(isOpen)
+        );
+    });
+
+    // Close menu after clicking a link
+    navLinks.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () {
+            closeMobileMenu();
+        });
+    });
+
+    // Close menu with Escape
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            closeMobileMenu();
+        }
+    });
+
+    // Close menu on desktop screen
+    window.addEventListener("resize", function () {
+        if (window.innerWidth > 768) {
+            closeMobileMenu();
+        }
+    });
+}
+
+
 /* ========================================
-4. BACK TO TOP
+   4. BACK TO TOP BUTTON
 ======================================== */
 
 const backToTop =
-document.getElementById("backToTop");
+    document.getElementById("backToTop");
+
+
+// Show or hide button
+function updateBackToTopVisibility() {
+    if (!backToTop) return;
+
+    backToTop.style.display =
+        window.scrollY > 300 ? "block" : "none";
+}
+
 
 if (backToTop) {
+    updateBackToTopVisibility();
 
     window.addEventListener(
         "scroll",
-        function () {
-
-            if (window.scrollY > 300) {
-
-                backToTop.style.display =
-                    "block";
-
-            }
-
-            else {
-
-                backToTop.style.display =
-                    "none";
-
-            }
-
-        }
+        updateBackToTopVisibility,
+        { passive: true }
     );
 
-    backToTop.addEventListener(
-        "click",
-        function () {
-
-            window.scrollTo({
-
-                top: 0,
-
-                behavior: "smooth"
-
-            });
-
-        }
-    );
-
+    // Scroll to top
+    backToTop.addEventListener("click", function () {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
 }
 
+
 /* ========================================
-5. BACK TO DOWN
+   5. BACK TO DOWN BUTTON
 ======================================== */
 
 const backToDown =
-document.getElementById("backToDown");
+    document.getElementById("backToDown");
+
 
 if (backToDown) {
-
-    backToDown.addEventListener(
-        "click",
-        function () {
-
-            window.scrollTo({
-
-                top: document.body.scrollHeight,
-
-                behavior: "smooth"
-
-            });
-
-        }
-    );
-
+    backToDown.addEventListener("click", function () {
+        window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior: "smooth"
+        });
+    });
 }
 
+
 /* ========================================
-6. GITHUB LINK
+   6. GITHUB LINK
 ======================================== */
 
 const githubLink =
-document.getElementById("githubLink");
+    document.getElementById("githubLink");
+
 
 if (githubLink) {
-
     githubLink.href =
-        "https://github.com/";
+        "https://github.com/ebsabulti72";
 
+    githubLink.target = "_blank";
+
+    githubLink.rel =
+        "noopener noreferrer";
 }
 
+
 /* ========================================
-7. LINKEDIN LINK
+   7. LINKEDIN LINK
 ======================================== */
 
 const linkedinLink =
-document.getElementById("linkedinLink");
+    document.getElementById("linkedinLink");
+
 
 if (linkedinLink) {
-
+    // Replace with your actual LinkedIn profile URL
+    // when you have one.
     linkedinLink.href =
         "https://www.linkedin.com/";
 
+    linkedinLink.target = "_blank";
+
+    linkedinLink.rel =
+        "noopener noreferrer";
 }
 
+
 /* ========================================
-8. CURRENT YEAR
+   8. CURRENT YEAR IN FOOTER
 ======================================== */
 
 const currentYear =
-new Date().getFullYear();
+    new Date().getFullYear();
 
 const footerText =
-document.querySelector("footer p");
+    document.querySelector("footer p");
+
 
 if (footerText) {
-
     footerText.textContent =
         "© " +
         currentYear +
         " Ebsa Bulti. All rights reserved.";
-
 }
-```
-
-
